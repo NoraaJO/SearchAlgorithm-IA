@@ -1,0 +1,189 @@
+from rute import Rute;
+import sys
+
+def genGame(row, column):
+    #if  (row % 2 != 0) or (column % 2 != 0):
+    #    for i in range(fila):
+    #        game 
+    new = set();
+    for r in range(row):
+        for c in range(column):
+            if (r < (column// 2)) or (r > column - (column//2-1)):
+                if (c+1 < (column // 2)) or (c+1 > column - (column//2-1)):
+                    noExist.add((r, c))
+                    pass;
+                else:
+                    new.add((r, c));            
+            else:
+                if (r == (row/2)-0.5) and (c == (column/2)-0.5):
+                    pass;
+                else:
+                    new.add((r, c));
+    return new;
+
+def moveValidP(game, piece, space, side):
+    if (space[0]>= 0 and space[0] < row ) and (space[1] >= 0 and space[1] < column) and (space not in noExist):
+        match side:
+            case 0: #"up"
+                if (piece[0] - 1 >= 1 and space[0] >= 0):
+                    if ((piece[0]-1, piece[1]) in game and (space not in game )):
+                        return True;
+            case 1: #"down"
+                if (piece[0] + 1 <= row-2 and space[0] <= row-1):
+                    if ((piece[0]+1, piece[1]) in game and (space not in game )):
+                        return True;
+            case 2: #"left"
+                if (piece[1] - 1 >= 1 and space[0] >= 0):
+                    if ((piece[0], piece[1]-1) in game and (space not in game )):
+                        return True;
+            case 3: #"right"
+                if (piece[1] + 1 <= column-2 and space[0] <= column-1):
+                    if ((piece[0], piece[1]+1) in game and (space not in game )):
+                        return True;
+            case _: #"In case of error"
+                return False;
+        return False;
+
+
+def pieceBloqP(game, piece):
+    #Parameters: (Game) The actual state, (piece) The piece evaluate in the actual state.
+    #Returns: Bool that the value is true if in the state aren't a legal move, and false in otherwise.
+    #    
+    posR = piece[0]
+    posC = piece[1];
+    if (moveValidP(game, piece, (posR-2, posC), 0)):
+        return False
+    if (moveValidP(game, piece, (posR+2, posC), 1)):
+        return False
+    if (moveValidP(game, piece, (posR, posC-2), 2)):
+        return False;
+    if (moveValidP(game, piece, (posR, posC+2), 3)):
+        return False;
+    return True;
+
+    #if (posR - 1 >= 1 and posR - 2 >= 0) and (posR-2, posC) not in noExist:
+    #    if ((posR-1, posC) in game and ((posR-2, posC) not in game )):
+    #        return False
+    #if (posR + 1 <= row-2 and posR + 2 <= row-1) and (posR+2, posC) not in noExist:
+    #    if ((posR + 1, posC) in game and ((posR+2, posC) not in game )):
+    #        return False
+    #if (posC - 1 >= 1 and posC - 2 >= 0) and (posR, posC-2) not in noExist:
+    #    if ((posR, posC-1) in game and ((posR, posC-2) not in game )):
+    #        return False
+    #if (posC + 1 <= column-2 and posC + 2 <= column-1) and (posR, posC+2) not in noExist:
+    #   if ((posR, posC + 1) in game and ((posR, posC+2) not in game)):
+    #       return False
+    #return True;
+
+def calculateH(game):
+    #Function that calculated the heuristic for the search A*
+    #Parameters: (game) the state to evaluate.
+    #Result: Return the heuristic for the game.
+    sumaTotal = len(game);
+    for piece in game:
+        if (pieceBloqP(game, piece)):
+            sumaTotal += 1;
+        #else:
+        #    print(piece)
+    return sumaTotal;
+
+def searchMove(game):
+    #Function: Search the move in the actual state.
+    #Parameters: (game) Actual state of the game.
+    #Returns: The posible move we can use.
+    moves= []
+    for piece in game:
+        if (moveValidP(game, piece, (piece[0]-2, piece[1]), 0)):
+            moves.append([piece,(piece[0]-2, piece[1]), (piece[0]-1, piece[1])]);
+        if (moveValidP(game, piece, (piece[0]+2, piece[1]), 1)):
+            moves.append([piece, (piece[0]+2, piece[1]), (piece[0]+1, piece[1])]);
+        if (moveValidP(game, piece, (piece[0], piece[1]-2), 2)):
+            moves.append([piece, (piece[0], piece[1]-2), (piece[0], piece[1]-1)]);
+        if (moveValidP(game, piece, (piece[0], piece[1]+2), 3)):
+            moves.append([piece, (piece[0], piece[1]+2), (piece[0],  piece[1]+1)]);
+    return moves;
+
+def makeMovement(game, action):
+    newState = game.copy();
+    newState.remove(action[0]); #Remove the piece we move, and the other piece in middle to get the new position. 
+    newState.remove(action[2]) 
+    newState.add(action[1]);
+    return newState;
+
+def comprobateStates(rute):
+    for closeStates in Close:
+        if rute.getState() == closeStates.getState():
+            if rute.getValue() < closeStates.getValue():
+                Open.append(closeStates);
+            else:
+                return;
+    
+    for index, openState in enumerate(Open):
+        if rute.getState() == openState.getState():
+            if rute.getValue() <  openState.getValue():
+                Open[index] = rute;
+                return;
+            else:
+                return;
+    Open.append(rute);
+
+    
+
+
+def findTheBestState():
+    best = None;
+    for State in Open:
+        if best is None:
+            best = State;
+        else: 
+            if State.getValue() < best.getValue():
+                if State.isObjective():
+                    Solution.append(State);
+                
+                best = State;
+    
+    Open.remove(best);
+    Close.append(best);
+    return best;
+
+
+def findResultAE(actualState):
+    try:
+        moves = searchMove(actualState.getState());
+        for option in moves:
+            newState = makeMovement(actualState.getState(), option)
+            newRute = Rute(newState, actualState, calculateH(newState) ,actualState.getCantMoves()+1);
+            comprobateStates(newRute);
+        nextState = findTheBestState();
+        if nextState.isObjective():
+            return nextState;
+        else:
+            return findResultAE(nextState);
+    except:
+        print(Open[-4].getState())
+        for Oa in Open:
+            print(Oa.getValue());
+        print(Oa.getState());
+        
+
+
+       
+noExist = set();
+row = 7
+column = 5
+Open = []
+Close = []
+Solution = [];
+sys.setrecursionlimit(3000)
+
+if __name__ == "__main__":
+    game = genGame(7,5);
+    rute = Rute(game, None, 48);
+    Close.append(rute);
+    findResultAE(rute);
+    #print(moveValidP(game, (0, 3), (0, 1)))
+    #print(len(game));S
+    #print("The new result is: ")
+    #new = makeMovement(game, [(3, 4), (3, 2), (3, 3)])
+    #print(len(new))
+    #print(pieceBloqP(game, (0,1)))
