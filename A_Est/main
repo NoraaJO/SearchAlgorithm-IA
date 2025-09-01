@@ -75,17 +75,24 @@ def pieceBloqP(game, piece):
     #       return False
     #return True;
 
+
 def calculateH(game):
     #Function that calculated the heuristic for the search A*
     #Parameters: (game) the state to evaluate.
     #Result: Return the heuristic for the game.
-    sumaTotal = len(game);
-    for piece in game:
-        if (pieceBloqP(game, piece)):
-            sumaTotal += 1;
-        #else:
-        #    print(piece)
+    sumaTotal =  len(game)-1;
+    #for piece in game:
+    #    if (pieceBloqP(game, piece)):
+    #        sumaTotal += 1;
+    #    #else:
+    #    #    print(piece)
     return sumaTotal;
+        
+
+#def calculateH(moves):
+#    ficha = moves[0];
+#    h = abs(ficha[0] - center[0]) + abs(ficha[1] - center[1])
+#    return h;
 
 def searchMove(game):
     #Function: Search the move in the actual state.
@@ -115,12 +122,14 @@ def comprobateStates(rute):
         if rute.getState() == closeStates.getState():
             if rute.getValue() < closeStates.getValue():
                 Open.append(closeStates);
+                return;
             else:
                 return;
     
     for index, openState in enumerate(Open):
         if rute.getState() == openState.getState():
             if rute.getValue() <  openState.getValue():
+                print(f"{rute.getValue()} vs {openState.getValue()}")
                 Open[index] = rute;
                 return;
             else:
@@ -137,9 +146,6 @@ def findTheBestState():
             best = State;
         else: 
             if State.getValue() < best.getValue():
-                if State.isObjective():
-                    Solution.append(State);
-                
                 best = State;
     
     Open.remove(best);
@@ -152,7 +158,7 @@ def findResultAE(actualState):
         moves = searchMove(actualState.getState());
         for option in moves:
             newState = makeMovement(actualState.getState(), option)
-            newRute = Rute(newState, actualState, calculateH(newState) ,actualState.getCantMoves()+1);
+            newRute = Rute(newState, actualState, calculateH(newState), actualState.getCantMoves()+1);
             comprobateStates(newRute);
         nextState = findTheBestState();
         if nextState.isObjective():
@@ -160,9 +166,11 @@ def findResultAE(actualState):
         else:
             return findResultAE(nextState);
     except:
-        print(Open[-4].getState())
-        for Oa in Open:
-            print(Oa.getValue());
+        print(Close[-4].getState())
+        for Oa in Close:
+            if len(Oa.getState()) <= 3:
+                print(Oa.getState())
+            #print((Oa.getState()));
         print(Oa.getState());
         
 
@@ -174,11 +182,13 @@ column = 5
 Open = []
 Close = []
 Solution = [];
-sys.setrecursionlimit(3000)
+center = None;
+sys.setrecursionlimit(1000)
 
 if __name__ == "__main__":
     game = genGame(7,5);
-    rute = Rute(game, None, 48);
+    center = ((row/2-0.5, column /2 -0.5))
+    rute = Rute(game, None, calculateH(game));
     Close.append(rute);
     findResultAE(rute);
     #print(moveValidP(game, (0, 3), (0, 1)))
